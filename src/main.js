@@ -7,6 +7,8 @@ const {
   globalShortcut,
 } = require("electron");
 const path = require("path");
+const fs = require("fs");
+const os = require("os");
 const {
   saveText,
   saveImage,
@@ -55,6 +57,76 @@ const toggleWindow = () => {
   }
 };
 
+// Monitor Desktop for new screenshots
+const desktopPath = path.join(os.homedir(), "Desktop");
+let knownScreenshots = new Set();
+
+// Initialize known screenshots
+const initializeScreenshots = () => {
+  if (fs.existsSync(desktopPath)) {
+    const files = fs.readdirSync(desktopPath);
+    files.forEach((file) => {
+      if (file.startsWith("Screenshot ") && file.endsWith(".png")) {
+        knownScreenshots.add(file);
+      }
+    });
+  }
+};
+
+// Process a new screenshot
+const processNewScreenshot = (filename) => {
+  // Skip if already processed
+  if (knownScreenshots.has(filename)) {
+    return;
+  }
+
+  knownScreenshots.add(filename);
+  const screenshotPath = path.join(desktopPath, filename);
+
+  // Check if file exists
+  if (!fs.existsSync(screenshotPath)) {
+    return;
+  }
+
+  // Try to read and save the screenshot
+  try {
+    const buffer = fs.readFileSync(screenshotPath);
+    saveImage(buffer);
+    enforceLimit();
+    console.log("Auto-captured screenshot:", filename);
+
+    // Notify renderer to refresh
+    if (window && window.webContents) {
+      window.webContents.send("clipboard-updated");
+    }
+  } catch (err) {
+    console.error("Failed to capture screenshot:", err);
+  }
+};
+
+// Check if file is a screenshot
+const isScreenshotFile = (filename) => {
+  return (
+    filename && filename.startsWith("Screenshot ") && filename.endsWith(".png")
+  );
+};
+
+const watchScreenshots = () => {
+  if (!fs.existsSync(desktopPath)) {
+    return;
+  }
+
+  fs.watch(desktopPath, (eventType, filename) => {
+    if (eventType !== "rename" || !isScreenshotFile(filename)) {
+      return;
+    }
+
+    setTimeout(() => {
+      processNewScreenshot(filename);
+    }, 500);
+  });
+};
+
 // Monitor Clipboard
 let lastText = "";
 let lastImageHash = "";
@@ -63,7 +135,7 @@ setInterval(() => {
   const text = clipboard.readText();
   if (text && text !== lastText) {
     saveText(text);
-    enforceLimit(); // Keep only 50 most recent items
+    enforceLimit();
     lastText = text;
     console.log("Saved Text:", text.substring(0, 20) + "...");
 
@@ -83,7 +155,7 @@ setInterval(() => {
 
     if (currentHash !== lastImageHash) {
       saveImage(buffer);
-      enforceLimit(); // Keep only 50 most recent items
+      enforceLimit();
       lastImageHash = currentHash;
       console.log("Saved Image");
 
@@ -134,6 +206,11 @@ app.whenReady().then(() => {
   if (!registered) {
     console.error("Shortcut registration failed");
   }
+
+  // Start monitoring screenshots
+  initializeScreenshots();
+  watchScreenshots();
+  console.log("Monitoring Desktop for screenshots...");
 });
 
 app.on("will-quit", () => {

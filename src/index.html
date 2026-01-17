@@ -1,242 +1,284 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Clipboard Manager</title>
-  <style>
-    :root {
-      /* Primary Dark Theme (Default) */
-      --bg-color: #0F1115;
-      --card-bg: #181B22;
-      --card-hover: #232733;
-      --border-color: #2B3040;
-      
-      --text-primary: #E5E7EB;
-      --text-secondary: #9CA3AF;
-      
-      --accent: #3B82F6;
-      --accent-hover: #60A5FA;
-      --danger: #EF4444;
-
-      /* Glass Effect Base */
-      --glass-bg: rgba(24, 27, 34, 0.7);
-    }
-
-    @media (prefers-color-scheme: light) {
-      /* Light Theme (Optional overrides) */
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Clipboard Manager</title>
+    <style>
       :root {
-        --bg-color: #F8FAFC;
-        --card-bg: #FFFFFF;
-        --card-hover: #E5E7EB;
-        --border-color: #CBD5E1;
-        
-        --text-primary: #0F172A;
-        --text-secondary: #475569;
-        
-        --accent: #2563EB;
-        --danger: #DC2626;
+        /* Primary Dark Theme (Default) */
+        --bg-color: #0f1115;
+        --card-bg: #181b22;
+        --card-hover: #232733;
+        --border-color: #2b3040;
 
-        --glass-bg: rgba(255, 255, 255, 0.75);
+        --text-primary: #e5e7eb;
+        --text-secondary: #9ca3af;
+
+        --accent: #3b82f6;
+        --accent-hover: #60a5fa;
+        --danger: #ef4444;
+
+        /* Glass Effect Base */
+        --glass-bg: rgba(24, 27, 34, 0.7);
       }
-    }
 
-    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+      @media (prefers-color-scheme: light) {
+        /* Light Theme (Optional overrides) */
+        :root {
+          --bg-color: #f8fafc;
+          --card-bg: #ffffff;
+          --card-hover: #e5e7eb;
+          --border-color: #cbd5e1;
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
-      background: transparent;
-      height: 100vh;
-      width: 100vw;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      user-select: none;
-      /* Remove default body padding if any */
-    }
+          --text-primary: #0f172a;
+          --text-secondary: #475569;
 
-    .container {
-      flex: 1;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-    }
+          --accent: #2563eb;
+          --danger: #dc2626;
 
-    .glass-window {
-      flex: 1;
-      background: var(--glass-bg);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 0;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3); /* Premium deep shadow */
-      border-radius: 12px; /* Clean radius */
-      
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
+          --glass-bg: rgba(255, 255, 255, 0.75);
+        }
+      }
 
-    .header {
-      padding: 16px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      -webkit-app-region: drag;
-      border-bottom: 1px solid var(--border-color);
-      background: rgba(0,0,0,0.1); /* Subtle darkening for header */
-    }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        -webkit-font-smoothing: antialiased;
+      }
 
-    .header h1 {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--text-primary);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto,
+          sans-serif;
+        background: transparent;
+        height: 100vh;
+        width: 100vw;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        user-select: none;
+        /* Remove default body padding if any */
+      }
 
-    .close-btn {
-      width: 24px;
-      height: 24px;
-      border-radius: 6px; /* Slightly rounded square for a cleaner tech look, or keep circle */
-      background: transparent;
-      border: 1px solid transparent;
-      color: var(--text-secondary);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      -webkit-app-region: no-drag;
-      transition: all 0.2s;
-    }
-    
-    .close-btn:hover { background: var(--danger); color: white; border-color: transparent; }
-    .close-btn::before { content: '✕'; font-size: 11px; }
+      .container {
+        flex: 1;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+      }
 
-    .content {
-      flex: 1;
-      overflow-y: overlay;
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
+      .glass-window {
+        flex: 1;
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 0;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3); /* Premium deep shadow */
+        border-radius: 12px; /* Clean radius */
 
-    .content::-webkit-scrollbar { width: 4px; }
-    .content::-webkit-scrollbar-track { background: transparent; }
-    .content::-webkit-scrollbar-thumb {
-      background: var(--border-color);
-      border-radius: 2px;
-    }
-    .content::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
 
-    .clip-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color); /* Matches theme spec */
-      padding: 12px 14px;
-      border-radius: 8px; /* Standard cleaner radius */
-      cursor: default;
-      transition: all 0.15s ease-out;
-      position: relative;
-    }
+      .header {
+        padding: 16px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        -webkit-app-region: drag;
+        border-bottom: 1px solid var(--border-color);
+        background: rgba(0, 0, 0, 0.1); /* Subtle darkening for header */
+      }
 
-    .clip-card:hover {
-      background: var(--card-hover);
-      border-color: var(--accent); /* Optional: Highlight border on hover */
-      transform: translateY(-1px);
-    }
+      .header h1 {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-primary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
 
-    .clip-card:active {
-      transform: translateY(0);
-      background: var(--accent);
-    }
-    .clip-card:active * { color: white !important; border-color: transparent; }
+      .close-btn {
+        width: 24px;
+        height: 24px;
+        border-radius: 6px; /* Slightly rounded square for a cleaner tech look, or keep circle */
+        background: transparent;
+        border: 1px solid transparent;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        -webkit-app-region: no-drag;
+        transition: all 0.2s;
+      }
 
-    .clip-meta {
-      font-size: 11px;
-      color: var(--text-secondary);
-      margin-bottom: 6px;
-      font-family: inherit;
-    }
+      .close-btn:hover {
+        background: var(--danger);
+        color: white;
+        border-color: transparent;
+      }
+      .close-btn::before {
+        content: "✕";
+        font-size: 11px;
+      }
 
-    .clip-content {
-      font-size: 13px;
-      color: var(--text-primary);
-      line-height: 1.5;
-    }
+      .content {
+        flex: 1;
+        overflow-y: overlay;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
 
-    .text-preview {
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      word-break: break-all;
-    }
+      .content::-webkit-scrollbar {
+        width: 4px;
+      }
+      .content::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .content::-webkit-scrollbar-thumb {
+        background: var(--border-color);
+        border-radius: 2px;
+      }
+      .content::-webkit-scrollbar-thumb:hover {
+        background: var(--text-secondary);
+      }
 
-    .image-preview {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      color: var(--text-primary);
-      font-size: 12px;
-    }
-    
-    .image-icon { font-size: 16px; }
+      .clip-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color); /* Matches theme spec */
+        padding: 12px 14px;
+        border-radius: 8px; /* Standard cleaner radius */
+        cursor: default;
+        transition: all 0.15s ease-out;
+        position: relative;
+      }
 
-    .empty-state {
-      margin-top: 60px;
-      text-align: center;
-      color: var(--text-secondary);
-    }
-    .empty-state-icon { font-size: 32px; margin-bottom: 12px; display: block; filter: grayscale(1); opacity: 0.5; }
+      .clip-card:hover {
+        background: var(--card-hover);
+        border-color: var(--accent); /* Optional: Highlight border on hover */
+        transform: translateY(-1px);
+      }
 
-    .toast {
-      position: absolute;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%) translateY(20px);
-      background: var(--accent);
-      color: white;
-      padding: 8px 16px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: 600;
-      opacity: 0;
-      transition: all 0.2s;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-      pointer-events: none;
-      z-index: 100;
-    }
-    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="glass-window">
-      <div class="header">
-        <h1>Clipboard History</h1>
-        <button class="close-btn" id="closeBtn"></button>
+      .clip-card:active {
+        transform: translateY(0);
+        background: var(--accent);
+      }
+      .clip-card:active * {
+        color: white !important;
+        border-color: transparent;
+      }
+
+      .clip-meta {
+        font-size: 11px;
+        color: var(--text-secondary);
+        margin-bottom: 6px;
+        font-family: inherit;
+      }
+
+      .clip-content {
+        font-size: 13px;
+        color: var(--text-primary);
+        line-height: 1.5;
+      }
+
+      .text-preview {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        word-break: break-all;
+      }
+
+      .image-preview {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--text-primary);
+        font-size: 12px;
+      }
+
+      .image-preview img {
+        height: 60px;
+        max-width: 120px;
+        object-fit: cover;
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+      }
+
+      .image-icon {
+        font-size: 16px;
+      }
+
+      .empty-state {
+        margin-top: 60px;
+        text-align: center;
+        color: var(--text-secondary);
+      }
+      .empty-state-icon {
+        font-size: 32px;
+        margin-bottom: 12px;
+        display: block;
+        filter: grayscale(1);
+        opacity: 0.5;
+      }
+
+      .toast {
+        position: absolute;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%) translateY(20px);
+        background: var(--accent);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        opacity: 0;
+        transition: all 0.2s;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        pointer-events: none;
+        z-index: 100;
+      }
+      .toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="glass-window">
+        <div class="header">
+          <h1>Clipboard History</h1>
+          <button class="close-btn" id="closeBtn"></button>
+        </div>
+        <div class="content" id="list"></div>
       </div>
-      <div class="content" id="list"></div>
     </div>
-  </div>
 
-  <div class="toast" id="toast">Copied to clipboard!</div>
+    <div class="toast" id="toast">Copied to clipboard!</div>
 
-  <script>
-    const list = document.getElementById("list");
-    const toast = document.getElementById("toast");
-    const closeBtn = document.getElementById("closeBtn");
+    <script>
+      const list = document.getElementById("list");
+      const toast = document.getElementById("toast");
+      const closeBtn = document.getElementById("closeBtn");
 
-    closeBtn.addEventListener('click', () => {
-      window.api.closeWindow();
-    });
+      closeBtn.addEventListener("click", () => {
+        window.api.closeWindow();
+      });
 
-    async function load() {
-      const history = await window.api.getHistory();
-      
-      if (history.length === 0) {
-        list.innerHTML = `
+      async function load() {
+        const history = await window.api.getHistory();
+
+        if (history.length === 0) {
+          list.innerHTML = `
           <div class="empty-state">
             <div class="empty-state-icon">📋</div>
             <div class="empty-state-text">
@@ -245,77 +287,81 @@
             </div>
           </div>
         `;
-        return;
-      }
-
-      list.innerHTML = history.map((item, index) => {
-        let contentHtml = "";
-        
-        if (item.type === "text") {
-          contentHtml = `<div class="text-preview">${escapeHtml(item.content)}</div>`;
-        } else {
-          const filename = item.imagePath.split(/[\\/]/).pop();
-          contentHtml = `
-            <div class="image-preview">
-              <div class="image-icon">🖼️</div>
-              <div>${filename}</div>
-            </div>
-          `;
+          return;
         }
 
-        const date = new Date(item.createdAt);
-        const timeString = date.toLocaleTimeString('en-US', { 
-          hour: 'numeric', 
-          minute: '2-digit',
-          hour12: true 
-        });
+        list.innerHTML = history
+          .map((item, index) => {
+            let contentHtml = "";
 
-        return `
+            if (item.type === "text") {
+              contentHtml = `<div class="text-preview">${escapeHtml(item.content)}</div>`;
+            } else {
+              const filename = item.imagePath.split(/[\\/]/).pop();
+              // Convert file path to file:// URL for Electron
+              const imageUrl = `file://${item.imagePath}`;
+              contentHtml = `
+            <div class="image-preview">
+              <img src="${imageUrl}" alt="${filename}" />
+              <div style="font-size: 11px; color: var(--text-secondary);">${filename}</div>
+            </div>
+          `;
+            }
+
+            const date = new Date(item.createdAt);
+            const timeString = date.toLocaleTimeString("en-US", {
+              hour: "numeric",
+              minute: "2-digit",
+              hour12: true,
+            });
+
+            return `
           <div class="clip-card" data-item='${JSON.stringify(item).replace(/'/g, "&apos;")}' style="animation-delay: ${index * 0.03}s">
             <div class="clip-meta">${timeString}</div>
             <div class="clip-content">${contentHtml}</div>
           </div>
         `;
-      }).join("");
+          })
+          .join("");
 
-      // Add click listeners
-      document.querySelectorAll('.clip-card').forEach(card => {
-        card.addEventListener('click', async () => {
-          const item = JSON.parse(card.getAttribute('data-item'));
-          await window.api.restore(item);
-          showToast();
+        // Add click listeners
+        document.querySelectorAll(".clip-card").forEach((card) => {
+          card.addEventListener("click", async () => {
+            const item = JSON.parse(card.getAttribute("data-item"));
+            await window.api.restore(item);
+            showToast();
+          });
         });
-      });
-    }
-
-    function showToast() {
-      toast.classList.add('show');
-      setTimeout(() => {
-        toast.classList.remove('show');
-      }, 2000);
-    }
-
-    function escapeHtml(text) {
-      if (!text) return "";
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    }
-
-    // Listen for clipboard updates
-    window.api.onClipboardUpdate(() => {
-      load();
-    });
-
-    // Load on start
-    load();
-
-    // Reload when window becomes visible
-    document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) {
-        load();
       }
-    });
-  </script>
-</body>
+
+      function showToast() {
+        toast.classList.add("show");
+        setTimeout(() => {
+          toast.classList.remove("show");
+        }, 2000);
+      }
+
+      function escapeHtml(text) {
+        if (!text) return "";
+        const div = document.createElement("div");
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      // Listen for clipboard updates
+      window.api.onClipboardUpdate(() => {
+        load();
+      });
+
+      // Load on start
+      load();
+
+      // Reload when window becomes visible
+      document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) {
+          load();
+        }
+      });
+    </script>
+  </body>
 </html>
