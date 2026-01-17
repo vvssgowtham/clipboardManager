@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+
+# Database and generated files
+src/clipboard.db
+src/images/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build output
+dist/
+build/
+*.app
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment variables
+.env
+.env.local
